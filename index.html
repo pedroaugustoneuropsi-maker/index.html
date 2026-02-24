@@ -1,43 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Treino</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin-top: 60px;
+  background-color: #f4f6f8;
+}
+
+.menu button {
+  padding: 12px 22px;
+  margin: 6px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2c7be5;
+  color: white;
+  cursor: pointer;
+}
+
+.menu button:hover {
+  background-color: #1a68d1;
+}
+
+#question {
+  font-size: 36px;
+  margin: 30px;
+}
+
+input {
+  font-size: 28px;
+  width: 140px;
+  text-align: center;
+  padding: 5px;
+}
+
+#submitBtn {
+  padding: 10px 20px;
+  margin-top: 15px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu" class="menu">
+  <h2>Escolha o tipo de treino</h2>
+
+  <button onclick="start('add')">n + n</button>
+  <button onclick="start('x2')">n x 2</button>
+  <button onclick="start('square')">n x n</button>
+  <button onclick="start('x5')">n x 5</button>
+  <button onclick="start('add_x2')">(n + n) e (n x 2)</button>
+  <button onclick="start('add_x2_square')">(n + n) e (n x 2) e (n x n)</button>
+  <button onclick="start('all')">(n + n) e (n x 2) e (n x n) e (n x 5)</button>
+</div>
+
+<div id="game" class="hidden">
+  <div id="question"></div>
+  <input type="number" id="answer">
+  <br>
+  <button id="submitBtn" onclick="submitAnswer()">Responder</button>
+</div>
+
+<div id="final" class="hidden">
+  <h2>Treino Finalizado!</h2>
+  <button onclick="goMenu()">Voltar ao menu principal</button>
+</div>
+
 <script>
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrKaaK1w5UbLKNRBJ9qwr45HupRSFB2E6ZqfS53lDHihZBzAzOhcI9ZYRQnrLhkHPndA/exec";
 
 let questions = [];
 let current = 0;
-let startTime;
-let correctAnswer;
+let startTime = 0;
+let correctAnswer = 0;
 let blockSubmit = false;
 
 function generateBlock(type){
   let block = [];
   for(let i=1; i<=9; i++){
-    if(type === "add") block.push({q: `${i} + ${i}`, a: i+i});
-    if(type === "x2") block.push({q: `${i} x 2`, a: i*2});
-    if(type === "square") block.push({q: `${i} x ${i}`, a: i*i});
-    if(type === "x5") block.push({q: `${i} x 5`, a: i*5});
+    if(type === "add") block.push({q: i + " + " + i, a: i+i});
+    if(type === "x2") block.push({q: i + " x 2", a: i*2});
+    if(type === "square") block.push({q: i + " x " + i, a: i*i});
+    if(type === "x5") block.push({q: i + " x 5", a: i*5});
   }
   return block;
 }
 
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
+function shuffle(array){
+  for(let i = array.length - 1; i > 0; i--){
     let j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    let temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
   }
   return array;
 }
 
 function start(mode){
 
-  questions = [];
-
   if(mode === "add") questions = generateBlock("add");
   if(mode === "x2") questions = generateBlock("x2");
   if(mode === "square") questions = generateBlock("square");
   if(mode === "x5") questions = generateBlock("x5");
-  if(mode === "add_x2") questions = [...generateBlock("add"), ...generateBlock("x2")];
-  if(mode === "add_x2_square") questions = [...generateBlock("add"), ...generateBlock("x2"), ...generateBlock("square")];
-  if(mode === "all") questions = [...generateBlock("add"), ...generateBlock("x2"), ...generateBlock("square"), ...generateBlock("x5")];
+  if(mode === "add_x2") questions = generateBlock("add").concat(generateBlock("x2"));
+  if(mode === "add_x2_square") questions = generateBlock("add").concat(generateBlock("x2")).concat(generateBlock("square"));
+  if(mode === "all") questions = generateBlock("add").concat(generateBlock("x2")).concat(generateBlock("square")).concat(generateBlock("x5"));
 
   questions = shuffle(questions);
 
@@ -64,10 +148,7 @@ function nextQuestion(){
   correctAnswer = questions[current].a;
 
   document.getElementById("answer").value = "";
-
-  setTimeout(()=>{
-    document.getElementById("answer").focus();
-  },50);
+  document.getElementById("answer").focus();
 
   startTime = Date.now();
   current++;
@@ -82,21 +163,23 @@ function submitAnswer(){
   let endTime = Date.now();
   let time = ((endTime - startTime)/1000).toFixed(2).replace(".", ",");
 
-  fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      question: questions[current-1].q,
-      givenAnswer: answer,
-      correctAnswer: correctAnswer,
-      time: time
-    })
-  });
+  if(SCRIPT_URL !== ""){
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        question: questions[current-1].q,
+        givenAnswer: answer,
+        correctAnswer: correctAnswer,
+        time: time
+      })
+    });
+  }
 
   if(current >= questions.length){
     document.getElementById("submitBtn").style.display = "none";
   }
 
-  setTimeout(nextQuestion, 250);
+  setTimeout(nextQuestion, 200);
 }
 
 function finish(){
@@ -116,3 +199,6 @@ document.getElementById("answer").addEventListener("keydown", function(e){
 });
 
 </script>
+
+</body>
+</html>
