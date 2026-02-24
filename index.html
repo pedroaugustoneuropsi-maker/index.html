@@ -3,41 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Treino de Matemática</title>
+<title>Treino Matemático</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
     text-align: center;
     background-color: #f4f6f9;
-    margin: 0;
-    padding: 0;
 }
 
 .container {
-    max-width: 500px;
-    margin: 60px auto;
+    max-width: 600px;
+    margin: 40px auto;
     background: white;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-h1 {
-    margin-bottom: 20px;
-}
-
-input {
-    padding: 10px;
-    font-size: 18px;
-    width: 80%;
-    margin-bottom: 15px;
-}
-
 button {
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
+    padding: 8px 15px;
+    margin: 5px;
     border-radius: 8px;
+    border: none;
     cursor: pointer;
     background-color: #2c7be5;
     color: white;
@@ -47,83 +35,154 @@ button:hover {
     background-color: #1a5fc4;
 }
 
-#feedback {
-    margin-top: 15px;
-    font-size: 18px;
-    font-weight: bold;
+input {
+    padding: 8px;
+    font-size: 16px;
 }
 
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 </style>
 </head>
+
 <body>
 
 <div class="container">
-    <h1>Treino de Matemática</h1>
-    
-    <div id="nomeBox">
-        <p>Digite seu nome para começar:</p>
-        <input type="text" id="nome" placeholder="Seu nome" />
-        <br>
-        <button onclick="iniciar()">Começar</button>
-    </div>
 
-    <div id="jogo" class="hidden">
-        <h2 id="pergunta"></h2>
-        <input type="number" id="resposta" />
-        <br>
-        <button onclick="verificar()">Responder</button>
-        <div id="feedback"></div>
-    </div>
+<h1>Treino de Matemática</h1>
+
+<div id="nomeBox">
+    <p>Digite seu nome:</p>
+    <input type="text" id="nome">
+    <br><br>
+    <button onclick="mostrarModos()">Continuar</button>
+</div>
+
+<div id="modos" class="hidden">
+    <h3>Escolha o treino:</h3>
+    <button onclick="iniciarTreino('a')">(a) 1+1 até 9+9</button>
+    <button onclick="iniciarTreino('b')">(b) n x 2</button>
+    <button onclick="iniciarTreino('c')">(c) n x n</button>
+    <button onclick="iniciarTreino('d')">(d) Tabuada do 5</button>
+    <button onclick="iniciarTreino('e')">(e) (a)+(b)</button>
+    <button onclick="iniciarTreino('f')">(f) (a)+(b)+(c)</button>
+    <button onclick="iniciarTreino('g')">(g) (a)+(b)+(c)+(d)</button>
+</div>
+
+<div id="jogo" class="hidden">
+    <h2 id="pergunta"></h2>
+    <input type="number" id="resposta">
+    <br><br>
+    <button onclick="verificar()">Responder</button>
+    <p id="feedback"></p>
+</div>
+
 </div>
 
 <script>
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4NlnwJ-M1JFBX-Gx2nYAjwtQFONeIeU4useHS8IS-fCHB6tGduyxXK7c199AQ80FWHw/exec";
+const SCRIPT_URL = "COLE_AQUI_SEU_LINK";
 
 let nomePaciente = "";
-let numero1, numero2;
+let perguntas = [];
+let indice = 0;
 let inicioTempo;
+let atual;
 
-function iniciar() {
+function mostrarModos() {
     nomePaciente = document.getElementById("nome").value.trim();
-    if (!nomePaciente) {
-        alert("Digite seu nome.");
-        return;
-    }
-
+    if (!nomePaciente) return alert("Digite seu nome.");
     document.getElementById("nomeBox").classList.add("hidden");
+    document.getElementById("modos").classList.remove("hidden");
+}
+
+function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+}
+
+function gerarA() {
+    let arr = [];
+    for (let i=1;i<=9;i++) {
+        arr.push({p:`${i}+${i}`, r:i+i});
+    }
+    return arr;
+}
+
+function gerarB() {
+    let arr = [];
+    for (let i=1;i<=9;i++) {
+        arr.push({p:`${i}×2`, r:i*2});
+    }
+    return arr;
+}
+
+function gerarC() {
+    let arr = [];
+    for (let i=1;i<=9;i++) {
+        arr.push({p:`${i}×${i}`, r:i*i});
+    }
+    return arr;
+}
+
+function gerarD() {
+    let arr = [];
+    for (let i=1;i<=9;i++) {
+        arr.push({p:`5×${i}`, r:5*i});
+    }
+    return arr;
+}
+
+function iniciarTreino(tipo) {
+
+    let A = gerarA();
+    let B = gerarB();
+    let C = gerarC();
+    let D = gerarD();
+
+    if (tipo === "a") perguntas = shuffle([...A, ...A]);
+    if (tipo === "b") perguntas = shuffle([...B, ...B]);
+    if (tipo === "c") perguntas = shuffle([...C, ...C]);
+    if (tipo === "d") perguntas = shuffle([...D, ...D]);
+
+    if (tipo === "e") perguntas = shuffle([...A, ...B]);
+    if (tipo === "f") perguntas = shuffle([...A, ...B, ...C]);
+    if (tipo === "g") perguntas = shuffle([...A, ...B, ...C, ...D]);
+
+    indice = 0;
+
+    document.getElementById("modos").classList.add("hidden");
     document.getElementById("jogo").classList.remove("hidden");
 
     novaPergunta();
 }
 
 function novaPergunta() {
-    numero1 = Math.floor(Math.random() * 50);
-    numero2 = Math.floor(Math.random() * 50);
 
-    document.getElementById("pergunta").innerText = `${numero1} + ${numero2} = ?`;
+    if (indice >= perguntas.length) {
+        document.getElementById("pergunta").innerText = "Treino finalizado!";
+        document.getElementById("feedback").innerText = "";
+        return;
+    }
+
+    atual = perguntas[indice];
+    document.getElementById("pergunta").innerText = atual.p + " = ?";
     document.getElementById("resposta").value = "";
     document.getElementById("feedback").innerText = "";
-
     inicioTempo = new Date().getTime();
 }
 
 function verificar() {
-    const respostaUsuario = parseInt(document.getElementById("resposta").value);
-    const correta = numero1 + numero2;
-    const fimTempo = new Date().getTime();
-    const tempoResposta = ((fimTempo - inicioTempo) / 1000).toFixed(2);
+    const resp = parseInt(document.getElementById("resposta").value);
+    const correta = atual.r;
+    const tempo = ((new Date().getTime() - inicioTempo)/1000).toFixed(2);
+    const acertou = resp === correta;
 
-    const acertou = respostaUsuario === correta;
+    document.getElementById("feedback").innerText =
+        acertou ? "✅ Correto!" : `❌ Errado! Era ${correta}`;
 
-    document.getElementById("feedback").innerText = acertou ? "✅ Correto!" : `❌ Errado! A resposta era ${correta}`;
+    enviarResultado(atual.p, resp, acertou, tempo);
 
-    enviarResultado(numero1 + " + " + numero2, respostaUsuario, acertou, tempoResposta);
-
-    setTimeout(novaPergunta, 1500);
+    indice++;
+    setTimeout(novaPergunta, 1000);
 }
 
 function enviarResultado(pergunta, resposta, acertou, tempo) {
@@ -136,7 +195,7 @@ function enviarResultado(pergunta, resposta, acertou, tempo) {
             correta: acertou,
             tempo: tempo
         })
-    }).catch(error => console.error("Erro ao enviar:", error));
+    });
 }
 
 </script>
