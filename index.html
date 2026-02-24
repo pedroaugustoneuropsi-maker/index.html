@@ -1,79 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Treino</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin-top: 40px;
-}
-
-button {
-  padding: 10px 20px;
-  margin: 5px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#question {
-  font-size: 32px;
-  margin: 20px;
-}
-
-input {
-  font-size: 24px;
-  width: 120px;
-  text-align: center;
-}
-
-.hidden {
-  display: none;
-}
-</style>
-</head>
-
-<body>
-
-<div id="menu">
-  <h2>Escolha o tipo de treino</h2>
-
-  <button onclick="start('add')">n + n</button>
-  <button onclick="start('x2')">n x 2</button>
-  <button onclick="start('square')">n x n</button>
-  <button onclick="start('x5')">n x 5</button>
-  <button onclick="start('add_x2')">(n + n) e (n x 2)</button>
-  <button onclick="start('add_x2_square')">(n + n) e (n x 2) e (n x n)</button>
-  <button onclick="start('all')">(n + n) e (n x 2) e (n x n) e (n x 5)</button>
-</div>
-
-<div id="game" class="hidden">
-  <div id="question"></div>
-  <input type="number" id="answer" />
-  <br><br>
-  <button id="submitBtn" onclick="submitAnswer()">Responder</button>
-</div>
-
-<div id="final" class="hidden">
-  <h2>Treino Finalizado!</h2>
-  <button onclick="goMenu()">Voltar ao menu principal</button>
-</div>
-
 <script>
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrKaaK1w5UbLKNRBJ9qwr45HupRSFB2E6ZqfS53lDHihZBzAzOhcI9ZYRQnrLhkHPndA/exec";
 
-let mode;
+let questions = [];
 let current = 0;
-let total = 10;
 let startTime;
 let correctAnswer;
 let blockSubmit = false;
 
-function start(selectedMode) {
-  mode = selectedMode;
+function generateBlock(type){
+  let block = [];
+  for(let i=1; i<=9; i++){
+    if(type === "add") block.push({q: `${i} + ${i}`, a: i+i});
+    if(type === "x2") block.push({q: `${i} x 2`, a: i*2});
+    if(type === "square") block.push({q: `${i} x ${i}`, a: i*i});
+    if(type === "x5") block.push({q: `${i} x 5`, a: i*5});
+  }
+  return block;
+}
+
+// 🔁 Função para embaralhar (Fisher-Yates)
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function start(mode){
+
+  questions = [];
+
+  if(mode === "add") questions = generateBlock("add");
+  if(mode === "x2") questions = generateBlock("x2");
+  if(mode === "square") questions = generateBlock("square");
+  if(mode === "x5") questions = generateBlock("x5");
+  if(mode === "add_x2") questions = [...generateBlock("add"), ...generateBlock("x2")];
+  if(mode === "add_x2_square") questions = [...generateBlock("add"), ...generateBlock("x2"), ...generateBlock("square")];
+  if(mode === "all") questions = [...generateBlock("add"), ...generateBlock("x2"), ...generateBlock("square"), ...generateBlock("x5")];
+
+  // 🔁 ALEATORIZA ORDEM
+  questions = shuffle(questions);
+
   current = 0;
 
   document.getElementById("menu").classList.add("hidden");
@@ -83,49 +52,9 @@ function start(selectedMode) {
   nextQuestion();
 }
 
-function randomNumber() {
-  return Math.floor(Math.random() * 9) + 1;
-}
+function nextQuestion(){
 
-function generateQuestion() {
-  let n1 = randomNumber();
-  let n2 = randomNumber();
-
-  let types = [];
-
-  if (mode === "add") types = ["add"];
-  if (mode === "x2") types = ["x2"];
-  if (mode === "square") types = ["square"];
-  if (mode === "x5") types = ["x5"];
-  if (mode === "add_x2") types = ["add","x2"];
-  if (mode === "add_x2_square") types = ["add","x2","square"];
-  if (mode === "all") types = ["add","x2","square","x5"];
-
-  let type = types[Math.floor(Math.random()*types.length)];
-
-  if (type === "add") {
-    correctAnswer = n1 + n2;
-    return `${n1} + ${n2}`;
-  }
-
-  if (type === "x2") {
-    correctAnswer = n1 * 2;
-    return `${n1} x 2`;
-  }
-
-  if (type === "square") {
-    correctAnswer = n1 * n1;
-    return `${n1} x ${n1}`;
-  }
-
-  if (type === "x5") {
-    correctAnswer = n1 * 5;
-    return `${n1} x 5`;
-  }
-}
-
-function nextQuestion() {
-  if (current >= total) {
+  if(current >= questions.length){
     finish();
     return;
   }
@@ -133,55 +62,51 @@ function nextQuestion() {
   blockSubmit = false;
   document.getElementById("submitBtn").style.display = "inline-block";
 
-  let question = generateQuestion();
-  document.getElementById("question").innerText = question;
+  document.getElementById("question").innerText = questions[current].q;
+  correctAnswer = questions[current].a;
+
   document.getElementById("answer").value = "";
 
-  startTime = Date.now();
-
-  setTimeout(() => {
+  setTimeout(()=>{
     document.getElementById("answer").focus();
-  }, 50);
+  },50);
 
+  startTime = Date.now();
   current++;
 }
 
-function submitAnswer() {
+function submitAnswer(){
 
-  if (blockSubmit) return;
-
+  if(blockSubmit) return;
   blockSubmit = true;
 
   let answer = Number(document.getElementById("answer").value);
   let endTime = Date.now();
-  let time = ((endTime - startTime)/1000).toFixed(2);
-
-  // converte ponto para vírgula
-  time = time.replace(".", ",");
+  let time = ((endTime - startTime)/1000).toFixed(2).replace(".", ",");
 
   fetch(SCRIPT_URL, {
     method: "POST",
     body: JSON.stringify({
-      questionNumber: current,
-      answer: answer,
-      correct: correctAnswer,
+      question: questions[current-1].q,
+      givenAnswer: answer,
+      correctAnswer: correctAnswer,
       time: time
     })
   });
 
-  if (current >= total) {
+  if(current >= questions.length){
     document.getElementById("submitBtn").style.display = "none";
   }
 
-  setTimeout(nextQuestion, 300);
+  setTimeout(nextQuestion, 250);
 }
 
-function finish() {
+function finish(){
   document.getElementById("game").classList.add("hidden");
   document.getElementById("final").classList.remove("hidden");
 }
 
-function goMenu() {
+function goMenu(){
   document.getElementById("final").classList.add("hidden");
   document.getElementById("menu").classList.remove("hidden");
 }
@@ -193,6 +118,3 @@ document.getElementById("answer").addEventListener("keydown", function(e){
 });
 
 </script>
-
-</body>
-</html>
