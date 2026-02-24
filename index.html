@@ -19,7 +19,6 @@ function generateBlock(type){
   return block;
 }
 
-// 🔁 Função para embaralhar (Fisher-Yates)
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
@@ -40,7 +39,6 @@ function start(mode){
   if(mode === "add_x2_square") questions = [...generateBlock("add"), ...generateBlock("x2"), ...generateBlock("square")];
   if(mode === "all") questions = [...generateBlock("add"), ...generateBlock("x2"), ...generateBlock("square"), ...generateBlock("x5")];
 
-  // 🔁 ALEATORIZA ORDEM
   questions = shuffle(questions);
 
   current = 0;
