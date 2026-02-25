@@ -1,217 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Treino</title>
+<title>Treino Matemática</title>
 
 <style>
 body {
   font-family: Arial, sans-serif;
   text-align: center;
-  margin-top: 60px;
-  background-color: #f4f6f8;
+  background: #f4f6f8;
 }
 
-input {
-  padding: 8px;
-  font-size: 16px;
-  margin: 10px;
+h2 {
+  margin-top: 20px;
 }
 
 button {
-  padding: 10px 20px;
+  padding: 10px 18px;
   margin: 6px;
-  font-size: 16px;
+  font-size: 15px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
-}
-
-.primary {
-  background-color: #2c7be5;
+  background: #2d6cdf;
   color: white;
 }
 
-.success {
-  background-color: #28a745;
-  color: white;
+button:hover {
+  background: #1f4fa8;
 }
 
-#question {
-  font-size: 36px;
-  margin: 30px;
+input {
+  padding: 6px;
+  margin: 5px;
 }
 
-.hidden {
-  display: none;
+.questao {
+  margin: 8px;
+  font-size: 18px;
 }
 </style>
 </head>
-
 <body>
 
-<!-- IDENTIFICAÇÃO -->
-<div id="login">
-  <h2>Identificação do Paciente</h2>
-  <input type="text" id="patientName" placeholder="Digite o nome do paciente">
-  <br>
-  <button class="primary" onclick="enterMenu()">Continuar</button>
+<h2>Treino de Matemática</h2>
+
+<!-- NOME PACIENTE -->
+<div>
+  <input type="text" id="paciente" placeholder="Nome do paciente">
 </div>
+
+<hr>
 
 <!-- MENU -->
-<div id="menu" class="hidden">
-  <h2>Escolha o tipo de treino</h2>
-
-  <button class="primary" onclick="start('add')">n + n</button>
-  <button class="primary" onclick="start('x2')">n x 2</button>
-  <button class="primary" onclick="start('square')">n x n</button>
-  <button class="primary" onclick="start('x5')">n x 5</button>
-  <button class="primary" onclick="start('add_x2')">(n + n) e (n x 2)</button>
-  <button class="primary" onclick="start('add_x2_square')">(n + n) e (n x 2) e (n x n)</button>
-  <button class="primary" onclick="start('all')">(n + n) e (n x 2) e (n x n) e (n x 5)</button>
-</div>
-
-<!-- TREINO -->
-<div id="game" class="hidden">
-  <div id="question"></div>
-  <input type="number" id="answer">
+<div>
+  <button onclick="iniciar(['mais'])">n + n</button>
+  <button onclick="iniciar(['x2'])">n x 2</button>
+  <button onclick="iniciar(['xn'])">n x n</button>
+  <button onclick="iniciar(['x5'])">n x 5</button>
   <br>
-  <button id="submitBtn" class="success" onclick="submitAnswer()">Responder</button>
+  <button onclick="iniciar(['mais','x2'])">n+n e n×2</button>
+  <button onclick="iniciar(['mais','x2','xn'])">+ , x2 , xn</button>
+  <button onclick="iniciar(['mais','x2','xn','x5'])">Todos</button>
 </div>
 
-<!-- FINAL -->
-<div id="final" class="hidden">
-  <h2>Treino Finalizado!</h2>
-  <button class="primary" onclick="goMenu()">Voltar ao menu principal</button>
-</div>
+<hr>
+
+<div id="quiz"></div>
+
+<button id="enviarBtn" style="display:none;" onclick="enviar()">Enviar</button>
 
 <script>
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrKaaK1w5UbLKNRBJ9qwr45HupRSFB2E6ZqfS53lDHihZBzAzOhcI9ZYRQnrLhkHPndA/exec";
+// ====== COLE SEU LINK AQUI ======
+const URL = "https://script.google.com/macros/s/AKfycbzrKaaK1w5UbLKNRBJ9qwr45HupRSFB2E6ZqfS53lDHihZBzAzOhcI9ZYRQnrLhkHPndA/exec";
+// exemplo:
+// const URL = "https://script.google.com/macros/s/AKfycbxxxxxxx/exec";
+// =================================
 
-let patient = "";
-let questions = [];
-let current = 0;
-let startTime = 0;
-let correctAnswer = 0;
-let blockSubmit = false;
 
-function enterMenu(){
-  patient = document.getElementById("patientName").value.trim();
-  if(patient === "") return;
+// -------- GERAÇÃO --------
 
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("menu").classList.remove("hidden");
-}
+function gerarBase(tipo) {
+  const contas = [];
 
-function generateBlock(type){
-  let block = [];
-  for(let i=1; i<=9; i++){
-    if(type === "add") block.push({q: i + " + " + i, a: i+i});
-    if(type === "x2") block.push({q: i + " x 2", a: i*2});
-    if(type === "square") block.push({q: i + " x " + i, a: i*i});
-    if(type === "x5") block.push({q: i + " x 5", a: i*5});
+  if (tipo === "mais") {
+    for (let i = 1; i <= 9; i++) {
+      contas.push({pergunta: `${i} + ${i}`, resposta: i + i});
+    }
   }
-  return block;
+
+  if (tipo === "x2") {
+    for (let i = 1; i <= 9; i++) {
+      contas.push({pergunta: `${i} x 2`, resposta: i * 2});
+    }
+  }
+
+  if (tipo === "xn") {
+    for (let i = 1; i <= 9; i++) {
+      contas.push({pergunta: `${i} x ${i}`, resposta: i * i});
+    }
+  }
+
+  if (tipo === "x5") {
+    for (let i = 1; i <= 9; i++) {
+      contas.push({pergunta: `${i} x 5`, resposta: i * 5});
+    }
+  }
+
+  return contas;
 }
 
-function shuffle(array){
-  for(let i=array.length-1; i>0; i--){
-    let j = Math.floor(Math.random()*(i+1));
-    let temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
+function embaralhar(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
 }
 
-function start(mode){
+function gerarModulo(tipos) {
+  let contas = [];
 
-  if(mode === "add") questions = generateBlock("add");
-  if(mode === "x2") questions = generateBlock("x2");
-  if(mode === "square") questions = generateBlock("square");
-  if(mode === "x5") questions = generateBlock("x5");
-  if(mode === "add_x2") questions = generateBlock("add").concat(generateBlock("x2"));
-  if(mode === "add_x2_square") questions = generateBlock("add").concat(generateBlock("x2")).concat(generateBlock("square"));
-  if(mode === "all") questions = generateBlock("add").concat(generateBlock("x2")).concat(generateBlock("square")).concat(generateBlock("x5"));
+  tipos.forEach(tipo => {
+    contas = contas.concat(gerarBase(tipo));
+  });
 
-  questions = shuffle(questions);
+  if (tipos.length === 1) {
+    contas = contas.concat(contas);
+  }
 
-  current = 0;
-
-  document.getElementById("menu").classList.add("hidden");
-  document.getElementById("game").classList.remove("hidden");
-  document.getElementById("final").classList.add("hidden");
-
-  nextQuestion();
+  return embaralhar(contas);
 }
 
-function nextQuestion(){
+let questoesAtuais = [];
 
-  if(current >= questions.length){
-    finish();
+function iniciar(tipos) {
+  const quiz = document.getElementById("quiz");
+  quiz.innerHTML = "";
+
+  questoesAtuais = gerarModulo(tipos);
+
+  questoesAtuais.forEach((q, index) => {
+    const div = document.createElement("div");
+    div.className = "questao";
+    div.innerHTML = `
+      ${index + 1}) ${q.pergunta} =
+      <input type="number" id="resposta${index}">
+    `;
+    quiz.appendChild(div);
+  });
+
+  document.getElementById("enviarBtn").style.display = "inline-block";
+}
+
+
+// -------- ENVIO --------
+
+function enviar() {
+  const nome = document.getElementById("paciente").value;
+
+  if (!nome) {
+    alert("Digite o nome do paciente.");
     return;
   }
 
-  blockSubmit = false;
-  document.getElementById("submitBtn").style.display = "inline-block";
+  const respostas = questoesAtuais.map((q, i) => {
+    const valor = document.getElementById(`resposta${i}`).value;
+    return {
+      pergunta: q.pergunta,
+      correta: q.resposta,
+      respostaPaciente: valor
+    };
+  });
 
-  document.getElementById("question").innerText = questions[current].q;
-  correctAnswer = questions[current].a;
+  const dados = {
+    paciente: nome,
+    dataHora: new Date().toLocaleString(),
+    respostas: respostas
+  };
 
-  document.getElementById("answer").value = "";
-  document.getElementById("answer").focus();
-
-  startTime = Date.now();
-  current++;
+  fetch(URL, {
+    method: "POST",
+    body: JSON.stringify(dados),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(res => res.text())
+  .then(() => {
+    alert("Enviado com sucesso!");
+  })
+  .catch(() => {
+    alert("Erro ao enviar.");
+  });
 }
-
-function submitAnswer(){
-
-  if(blockSubmit) return;
-  blockSubmit = true;
-
-  let answer = Number(document.getElementById("answer").value);
-  let endTime = Date.now();
-  let time = ((endTime - startTime)/1000).toFixed(2).replace(".", ",");
-
-  if(SCRIPT_URL !== ""){
-    fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        patient: patient,
-        question: questions[current-1].q,
-        givenAnswer: answer,
-        correctAnswer: correctAnswer,
-        time: time
-      })
-    });
-  }
-
-  if(current >= questions.length){
-    document.getElementById("submitBtn").style.display = "none";
-  }
-
-  setTimeout(nextQuestion, 200);
-}
-
-function finish(){
-  document.getElementById("game").classList.add("hidden");
-  document.getElementById("final").classList.remove("hidden");
-}
-
-function goMenu(){
-  document.getElementById("final").classList.add("hidden");
-  document.getElementById("menu").classList.remove("hidden");
-}
-
-document.getElementById("patientName").addEventListener("keydown", function(e){
-  if(e.key === "Enter") enterMenu();
-});
-
-document.getElementById("answer").addEventListener("keydown", function(e){
-  if(e.key === "Enter") submitAnswer();
-});
 
 </script>
 
